@@ -35,6 +35,7 @@ const timezone = String(process.env.NPC_TIMEZONE || "Europe/Warsaw").trim();
 const cooldownSeconds = Math.max(0, toInt(process.env.NPC_COOLDOWN_SECONDS, 5));
 const replyChance = Math.max(1, Math.min(100, toInt(process.env.NPC_REPLY_CHANCE, 100)));
 const allowedChannelIds = new Set(splitCsv(process.env.NPC_ALLOWED_CHANNEL_IDS));
+const debugLogs = String(process.env.NPC_DEBUG || "true").trim().toLowerCase() !== "false";
 const cooldowns = new Map();
 
 const client = new Client({
@@ -66,6 +67,12 @@ function isCoolingDown(message) {
   return false;
 }
 
+function debug(message) {
+  if (debugLogs) {
+    console.log(message);
+  }
+}
+
 client.once(Events.ClientReady, (readyClient) => {
   console.log(`Chaos NPC online jako ${readyClient.user.tag}`);
   console.log(`Timezone: ${timezone}`);
@@ -74,6 +81,7 @@ client.once(Events.ClientReady, (readyClient) => {
       ? `Allowed channels: ${Array.from(allowedChannelIds).join(", ")}`
       : "Allowed channels: wszystkie",
   );
+  console.log(`Debug logs: ${debugLogs ? "on" : "off"}`);
 });
 
 client.on(Events.MessageCreate, async (message) => {
@@ -82,19 +90,27 @@ client.on(Events.MessageCreate, async (message) => {
       return;
     }
 
+    debug(
+      `MessageCreate guild=${message.guildId} channel=${message.channelId} author=${message.author.tag} content="${message.content || "[empty]"}" mentions=${Array.from(message.mentions.users.keys()).join(",") || "[none]"}`,
+    );
+
     if (!isAllowedChannel(message.channelId)) {
+      debug(`Ignored: channel ${message.channelId} is not in NPC_ALLOWED_CHANNEL_IDS.`);
       return;
     }
 
     if (!message.mentions.users.has(client.user.id)) {
+      debug(`Ignored: message does not mention bot id ${client.user.id}.`);
       return;
     }
 
     if (Math.floor(Math.random() * 100) + 1 > replyChance) {
+      debug("Ignored: reply chance roll skipped this message.");
       return;
     }
 
     if (isCoolingDown(message)) {
+      debug("Ignored: cooldown active for this user/channel.");
       return;
     }
 
@@ -115,6 +131,7 @@ client.on(Events.MessageCreate, async (message) => {
         repliedUser: false,
       },
     });
+    debug("Replied successfully.");
   } catch (error) {
     console.error("Blad obslugi wiadomosci:", error);
   }
@@ -135,4 +152,3 @@ process.on("SIGTERM", async () => {
 });
 
 await client.login(token);
-
