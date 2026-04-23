@@ -155,6 +155,106 @@ const CONVERSATION_CLOSES = [
   "Zostawiam to na stole i odsuwam sie powoli.",
 ];
 
+const SYMBOLS = [
+  "parasol", "pusty kubek", "zlamany kompas", "krzeslo przy drzwiach", "paragon z jutra",
+  "latarka bez baterii", "niedokonczona mapa", "trzeci przycisk", "karteczka bez tekstu",
+  "zegarek cofajacy wymowki", "cien bez wlasciciela", "klucz bez zamka", "dywan udajacy portal",
+  "moneta z trzema stronami", "drzwi opisane jako sciana", "radio nadajace cisze",
+  "widelec do decyzji", "folder NIE OTWIERAC", "kamien z regulaminem", "szklanka pelna echa",
+  "kabel od emocji", "plakat ostrzegajacy przed soba", "lupa do intencji", "stempel chaosu",
+  "bilet do wczoraj", "pilka odbijajaca tematy", "instrukcja do niczego", "mapa bez polnocy",
+];
+
+const AUTHORITIES = [
+  "komisja krzesel obrotowych", "rada pustych kubkow", "sekretariat bocznych questow",
+  "wydzial rzeczy prawie normalnych", "archiwum niepewnych odpowiedzi", "komitet trzeciej opcji",
+  "inspektorat parasoli", "towarzystwo podejrzanych przecinkow", "rada cieni tymczasowych",
+  "biuro zgubionych sensow", "kolejka do nieistniejacych drzwi", "zwiazek zawodowy echa",
+  "komora map niedokonczonych", "zaklad poprawiania przypadkow", "trybunal herbaty",
+];
+
+const ACTIONS = [
+  "odlozyc temat na srodek stolu", "nazwac problem imieniem", "sprawdzic, czy cien sie zgadza",
+  "zapytac trzeci przedmiot od lewej", "zrobic probe na malym chaosie", "odwrocic kolejnosc pytan",
+  "zapisac pierwsza mysl i podejrzewac druga", "przestawic jeden przecinek", "wybrac opcje, ktora mruga",
+  "udac, ze to byl test", "wezwac kogos z lepszym parasolem", "dac sprawie 7 minut ciszy",
+  "porownac to z najgorszym pomyslem w pokoju", "zbudowac z tego boczny quest",
+  "sprawdzic, czy odpowiedz ma zapach regulaminu",
+];
+
+const CONSEQUENCES = [
+  "watek zacznie udawac, ze byl planem od poczatku",
+  "najmniejszy problem dostanie zbyt duzo wladzy",
+  "ktos znajdzie sens, ale bedzie musial go oddac przed 18:00",
+  "normalnosc poprosi o przerwe techniczna",
+  "echo zacznie poprawiac interpunkcje",
+  "trzecia opcja stanie sie pierwsza, ale tylko na papierze",
+  "parasol zyska argument moralny",
+  "mapa obrazi sie na polnoc",
+  "ktos wygra dyskusje przez przypadek",
+  "krzesla beda udawac, ze o niczym nie wiedza",
+  "winda zabierze nas na pietro interpretacji",
+  "pytanie zacznie naliczac odsetki",
+  "odpowiedz zrobi sie zbyt pewna siebie",
+  "przypadek wpisze sie na liste obecnosci",
+  "sens pojawi sie bokiem i bez zapowiedzi",
+];
+
+const OBSERVATION_TEMPLATES = [
+  "W sprawie **{topic}** widze slad: **{symbol}**. To zwykle znaczy, ze trzeba **{action}**.",
+  "Jesli tematem jest **{topic}**, to **{authority}** kazaloby najpierw **{action}**.",
+  "**{topic}** brzmi jak sprawa, w ktorej **{symbol}** nie jest dowodem, ale bardzo chce nim byc.",
+  "Moja notatka robocza: **{topic}** + **{symbol}** = ryzyko, ze **{consequence}**.",
+  "To ma energie sytuacji, gdzie nalezy **{action}**, zanim **{consequence}**.",
+  "Wedlug **{authority}**, **{topic}** jest podejrzane dopiero wtedy, gdy pojawi sie **{symbol}**.",
+  "Wersja bezpieczna: **{action}**. Wersja ciekawa: poczekac, az **{consequence}**.",
+  "Nie nazwalbym tego problemem. Nazwalbym to zaproszeniem do miejsca, gdzie **{symbol}** pelni funkcje argumentu.",
+  "Tu nie chodzi o odpowiedz. Tu chodzi o to, kto pierwszy zauwazy, ze **{consequence}**.",
+  "Dla porzadku: **{topic}** powinno zostac zbadane przez **{authority}** i jeden podejrzany przedmiot.",
+];
+
+const ADVICE_TEMPLATES = [
+  "Praktycznie: **{action}** i nie ufaj pierwszemu wrazeniu.",
+  "Jesli mam dac rade: trzymaj blisko **{symbol}**, ale nie pozwol mu decydowac.",
+  "Najmniej zla opcja to **{action}**.",
+  "Ja bym zrobil tak: **{action}**, a potem sprawdzil, czy **{consequence}**.",
+  "W normalnych warunkach powiedzialbym 'nie wiem'. W tych warunkach mowie: **{action}**.",
+  "Ustalmy jedno: jesli pojawi sie **{symbol}**, zmieniamy plan.",
+  "Moj protokol awaryjny: **{action}**, zanotowac wynik, nie patrzec prosto na **{symbol}**.",
+  "Nie rozstrzygalbym tego sila. Rozstrzygnalbym to przez **{authority}** i bardzo cierpliwy kubek.",
+];
+
+const STATEMENT_REACTIONS = [
+  "Przyjalem. To zdanie ma posture przedmiotu, ktory wie, ze stoi za blisko krawedzi.",
+  "Zanotowane. Brzmi jak poczatek rozmowy, ktora nie poprosila o pozwolenie.",
+  "Rozumiem. To ma maly ladunek chaosu, ale jeszcze nie wymaga ewakuacji.",
+  "Okej. W mojej skali to jest 'podejrzanie spokojne'.",
+  "Slysze to. Gdzies w tle ktos przesuwa krzeslo i udaje, ze to przypadek.",
+  "To zdanie powinno miec przypis, ale przypis uciekl.",
+  "Przyjmuje do wiadomosci i chowam do szuflady z napisem 'moze wrocic'.",
+  "To brzmi jak rzecz, ktora za chwile bedzie udawac kontekst.",
+];
+
+const STOP_WORDS = new Set([
+  "czy", "jak", "jaki", "jaka", "jakie", "jest", "sa", "sie", "mam", "masz", "mamy",
+  "ten", "ta", "to", "tego", "tym", "dla", "oraz", "albo", "ale", "nie", "tak", "mnie",
+  "tobie", "ciebie", "jego", "jej", "ich", "moze", "mozesz", "powiedz", "dlaczego",
+  "czemu", "kiedy", "gdzie", "ktory", "ktora", "ktore", "jestem", "jesteś", "jestes",
+  "bot", "bota", "npc", "chaos",
+]);
+
+const POLISH_CHAR_MAP = {
+  "ą": "a",
+  "ć": "c",
+  "ę": "e",
+  "ł": "l",
+  "ń": "n",
+  "ó": "o",
+  "ś": "s",
+  "ź": "z",
+  "ż": "z",
+};
+
 function hashString(value) {
   let hash = 2166136261;
   for (let index = 0; index < value.length; index += 1) {
@@ -177,6 +277,34 @@ function seededRandom(seed) {
 
 function pick(items, random) {
   return items[Math.floor(random() * items.length)];
+}
+
+function simplifyText(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[ąćęłńóśźż]/g, (letter) => POLISH_CHAR_MAP[letter] || letter);
+}
+
+function extractTopic(prompt) {
+  const words = simplifyText(prompt)
+    .replace(/<@!?\d+>/g, " ")
+    .replace(/[^\p{L}\p{N}\s-]/gu, " ")
+    .split(/\s+/)
+    .map((word) => word.trim())
+    .filter((word) => word.length >= 4 && !STOP_WORDS.has(word));
+
+  const uniqueWords = [];
+  for (const word of words) {
+    if (!uniqueWords.includes(word)) {
+      uniqueWords.push(word);
+    }
+  }
+
+  return uniqueWords.slice(0, 3).join(" ") || "ten watek";
+}
+
+function fillTemplate(template, data) {
+  return template.replace(/\{(\w+)\}/g, (_, key) => data[key] || "");
 }
 
 function getDayKey(timeZone) {
@@ -221,7 +349,7 @@ function getOptionsFromPrompt(prompt) {
   const normalized = prompt
     .replace(/[?!.]/g, " ")
     .replace(/\s+/g, " ")
-    .replace(/^(wybierz|wybor|wybór|co wybrac|co wybrać|zdecyduj|decyduj)\s+/i, "")
+    .replace(/^(wybierz|wybor|co wybrac|zdecyduj|decyduj)\s+/i, "")
     .trim();
 
   if (normalized.includes(" czy ")) {
@@ -236,11 +364,31 @@ function getOptionsFromPrompt(prompt) {
 }
 
 function getMessageRandom(npc, prompt, salt) {
-  return seededRandom(hashString(`${npc.dayKey}:${npc.fullName}:${salt}:${prompt}`));
+  return seededRandom(hashString(`${npc.dayKey}:${npc.fullName}:${npc.replySeed || ""}:${salt}:${prompt}`));
 }
 
 function pickFromForMessage(items, npc, prompt, salt) {
   return pick(items, getMessageRandom(npc, prompt, salt));
+}
+
+function buildTemplateData(npc, prompt, salt = "data") {
+  return {
+    topic: extractTopic(prompt),
+    symbol: pickFromForMessage(SYMBOLS, npc, prompt, `${salt}:symbol`),
+    authority: pickFromForMessage(AUTHORITIES, npc, prompt, `${salt}:authority`),
+    action: pickFromForMessage(ACTIONS, npc, prompt, `${salt}:action`),
+    consequence: pickFromForMessage(CONSEQUENCES, npc, prompt, `${salt}:consequence`),
+  };
+}
+
+function buildObservation(npc, prompt, salt = "observation") {
+  const template = pickFromForMessage(OBSERVATION_TEMPLATES, npc, prompt, `${salt}:template`);
+  return fillTemplate(template, buildTemplateData(npc, prompt, salt));
+}
+
+function buildAdvice(npc, prompt, salt = "advice") {
+  const template = pickFromForMessage(ADVICE_TEMPLATES, npc, prompt, `${salt}:template`);
+  return fillTemplate(template, buildTemplateData(npc, prompt, salt));
 }
 
 function formatIntro(npc) {
@@ -267,7 +415,7 @@ function formatOmen(npc) {
   return [
     `**Znak od ${npc.fullName}:**`,
     npc.omen,
-    `Interpretacja: ${npc.filler}`,
+    `Interpretacja: ${pickFromForMessage(FILLERS, npc, npc.omen, "omen")}`,
   ].join("\n");
 }
 
@@ -289,47 +437,48 @@ function formatChoice(npc, prompt) {
 function formatDefault(npc, prompt) {
   const hasQuestion = prompt.includes("?");
   if (hasQuestion) {
-    const lowered = prompt.toLowerCase();
+    const lowered = simplifyText(prompt);
     const opener = lowered.startsWith("dlaczego") || lowered.startsWith("czemu")
       ? pickFromForMessage(WHY_OPENERS, npc, prompt, "why")
       : lowered.startsWith("czy")
         ? pickFromForMessage(YES_NO_OPENERS, npc, prompt, "yes-no")
         : pickFromForMessage(OPINION_OPENERS, npc, prompt, "question");
-    const close = pickFromForMessage(CONVERSATION_CLOSES, npc, prompt, "close");
 
     return [
       `${npc.fullName}: ${opener}`,
-      close,
+      buildObservation(npc, prompt, "question-observation"),
+      buildAdvice(npc, prompt, "question-advice"),
     ].join("\n");
   }
 
-  const opener = pickFromForMessage(OPINION_OPENERS, npc, prompt, "statement");
+  const opener = pickFromForMessage(STATEMENT_REACTIONS, npc, prompt, "statement");
   const close = pickFromForMessage(CONVERSATION_CLOSES, npc, prompt, "statement-close");
   return [
     `${npc.fullName}: ${opener}`,
-    `Zapis w notesie: "${prompt || "cisza"}".`,
+    buildObservation(npc, prompt, "statement-observation"),
     close,
   ].join("\n");
 }
 
-export function buildNpcReply({ content, botId, guildId, timeZone }) {
+export function buildNpcReply({ content, botId, guildId, timeZone, messageId }) {
   const npc = buildNpc(guildId || "direct", timeZone || "Europe/Warsaw");
+  npc.replySeed = String(messageId || `${Date.now()}:${Math.random()}`);
   const prompt = stripBotMention(content, botId);
-  const lowered = prompt.toLowerCase();
+  const lowered = simplifyText(prompt);
 
-  if (!prompt || /kim jestes|kim jesteś|przedstaw|npc|opis/.test(lowered)) {
+  if (!prompt || /kim jestes|przedstaw|npc|opis/.test(lowered)) {
     return formatIntro(npc);
   }
 
-  if (/quest|misja|zadanie|daj cos|daj coś/.test(lowered)) {
+  if (/quest|misja|zadanie|daj cos/.test(lowered)) {
     return formatQuest(npc);
   }
 
-  if (/omen|znak|przepowiednia|wrozba|wróżba|los/.test(lowered)) {
+  if (/omen|znak|przepowiednia|wrozba|los/.test(lowered)) {
     return formatOmen(npc);
   }
 
-  if (/^(wybierz|wybor|wybór|co wybrac|co wybrać|zdecyduj|decyduj)\b/.test(lowered) || lowered.includes(",")) {
+  if (/^(wybierz|wybor|co wybrac|zdecyduj|decyduj)\b/.test(lowered) || lowered.includes(",")) {
     return formatChoice(npc, prompt);
   }
 
