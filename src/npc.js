@@ -109,6 +109,52 @@ const FILLERS = [
   "W normalnym swiecie to nie ma sensu. Na szczescie nie jestesmy w normalnym swiecie.",
 ];
 
+const YES_NO_OPENERS = [
+  "Krotko: tak, ale nie w sposob, ktory dobrze wyglada w dokumentacji.",
+  "Nie powiedzialbym, ze tak. Powiedzialbym: to zalezy od tego, kto trzyma paragon.",
+  "Raczej tak, jesli zaakceptujemy, ze normalnosc jest tylko ustawieniem domyslnym.",
+  "Raczej nie, chyba ze ktos juz otworzyl boczny quest.",
+  "To brzmi jak pytanie, na ktore odpowiedz zmienia sie po przecinku.",
+  "Tak, ale tylko w wersji wydarzen, w ktorej krzesla maja prawo glosu.",
+  "Nie do konca. Widze tu bardziej objaw niz plan.",
+  "Moj werdykt: mozliwe, ale podejrzane.",
+  "Jesli pytasz oficjalnie: nie. Jesli pytasz chaos: oczywiscie.",
+  "To jest ten typ sprawy, gdzie odpowiedz brzmi 'tak', ale przypisy sa grozniejsze od tresci.",
+];
+
+const WHY_OPENERS = [
+  "Bo ktos kiedys uznal, ze prosty sens jest zbyt tani.",
+  "Bo przypadek lubi udawac system, kiedy nikt nie patrzy.",
+  "Bo kazdy porzadek ma w piwnicy maly karton z chaosem.",
+  "Bo odpowiedz przyszla pierwsza, a pytanie tylko ja dogonilo.",
+  "Bo tak dzialaja rzeczy, ktore udaja normalne zbyt przekonujaco.",
+  "Bo najgorsze wyjasnienia czasem maja najlepsza frekwencje.",
+  "Bo ktos dal metaforze klucze do serwerowni.",
+  "Bo gdyby to mialo pelny sens, nie potrzebowalibysmy NPC-a.",
+];
+
+const OPINION_OPENERS = [
+  "Moja opinia: to ma potencjal, ale trzeba odpiac od tego trzy niepotrzebne alarmy.",
+  "Brzmi jak pomysl, ktory jest glupi tylko do momentu, az zacznie dzialac.",
+  "Widze w tym klimat, ale tez maly znak ostrzegawczy przy wejsciu.",
+  "To jest podejrzanie sensowne. Nie ufalbym temu bez nadzoru.",
+  "To moze zadzialac, jesli nie bedziemy wymagac od tego godnosci.",
+  "Jako NPC zatwierdzam, ale jako obywatel chaosu prosze o dodatkowy test.",
+  "Ma energie bocznego questa, ktory przypadkiem staje sie glownym watkiem.",
+  "Nie jest to normalne. To akurat zaleta.",
+];
+
+const CONVERSATION_CLOSES = [
+  "Dodalbym tylko jeden warunek: niech ktos nazwie problem, zanim problem nazwie nas.",
+  "W moim notesie to dostaje znaczek 'obserwowac z bezpiecznej odleglosci'.",
+  "Jesli pojawi sie parasol, udajemy, ze to bylo planowane.",
+  "To nie jest porada prawna, to szept z korytarza bocznych questow.",
+  "Najwazniejsze: nie klikaj trzeciej opcji bez swiadka.",
+  "Tyle moge powiedziec, zanim echo zacznie poprawiac moje zdania.",
+  "Brzmi jak cos, co powinno miec instrukcje, ale zgubilo ja celowo.",
+  "Zostawiam to na stole i odsuwam sie powoli.",
+];
+
 function hashString(value) {
   let hash = 2166136261;
   for (let index = 0; index < value.length; index += 1) {
@@ -189,6 +235,14 @@ function getOptionsFromPrompt(prompt) {
   return [];
 }
 
+function getMessageRandom(npc, prompt, salt) {
+  return seededRandom(hashString(`${npc.dayKey}:${npc.fullName}:${salt}:${prompt}`));
+}
+
+function pickFromForMessage(items, npc, prompt, salt) {
+  return pick(items, getMessageRandom(npc, prompt, salt));
+}
+
 function formatIntro(npc) {
   return [
     `Jestem **${npc.fullName}**.`,
@@ -228,23 +282,33 @@ function formatChoice(npc, prompt) {
   const chosen = pick(options, random);
   return [
     `${npc.fullName} wybiera: **${chosen}**.`,
-    `Powod: ${npc.filler}`,
+    `Powod: ${pickFromForMessage(FILLERS, npc, prompt, "choice-reason")}`,
   ].join("\n");
 }
 
 function formatDefault(npc, prompt) {
   const hasQuestion = prompt.includes("?");
   if (hasQuestion) {
+    const lowered = prompt.toLowerCase();
+    const opener = lowered.startsWith("dlaczego") || lowered.startsWith("czemu")
+      ? pickFromForMessage(WHY_OPENERS, npc, prompt, "why")
+      : lowered.startsWith("czy")
+        ? pickFromForMessage(YES_NO_OPENERS, npc, prompt, "yes-no")
+        : pickFromForMessage(OPINION_OPENERS, npc, prompt, "question");
+    const close = pickFromForMessage(CONVERSATION_CLOSES, npc, prompt, "close");
+
     return [
-      `${npc.fullName} odpowiada: **prawdopodobnie tak, ale tylko jesli ${npc.problem}**.`,
-      npc.filler,
+      `${npc.fullName}: ${opener}`,
+      close,
     ].join("\n");
   }
 
+  const opener = pickFromForMessage(OPINION_OPENERS, npc, prompt, "statement");
+  const close = pickFromForMessage(CONVERSATION_CLOSES, npc, prompt, "statement-close");
   return [
-    `${npc.fullName} przyjmuje to do wiadomosci.`,
-    `W jego notesie brzmi to tak: "${prompt || "cisza"}".`,
-    npc.filler,
+    `${npc.fullName}: ${opener}`,
+    `Zapis w notesie: "${prompt || "cisza"}".`,
+    close,
   ].join("\n");
 }
 
@@ -265,7 +329,7 @@ export function buildNpcReply({ content, botId, guildId, timeZone }) {
     return formatOmen(npc);
   }
 
-  if (/wybierz|wybor|wybór|czy|,/.test(lowered)) {
+  if (/^(wybierz|wybor|wybór|co wybrac|co wybrać|zdecyduj|decyduj)\b/.test(lowered) || lowered.includes(",")) {
     return formatChoice(npc, prompt);
   }
 
