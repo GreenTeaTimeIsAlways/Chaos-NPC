@@ -1,0 +1,16 @@
+{
+  "name": "chaos-npc-bot",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Mention-based Chaos NPC Discord bot without AI APIs.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.19.2"
+  }
+}
