@@ -4,6 +4,11 @@ import {
   GatewayIntentBits,
   Partials,
 } from "discord.js";
+import {
+  buildGroqNpcReply,
+  getAiRuntimeStatus,
+  readAiConfig,
+} from "./groq.js";
 import { buildNpcReply } from "./npc.js";
 
 function requireEnv(name) {
@@ -36,6 +41,7 @@ const cooldownSeconds = Math.max(0, toInt(process.env.NPC_COOLDOWN_SECONDS, 5));
 const replyChance = Math.max(1, Math.min(100, toInt(process.env.NPC_REPLY_CHANCE, 100)));
 const allowedChannelIds = new Set(splitCsv(process.env.NPC_ALLOWED_CHANNEL_IDS));
 const debugLogs = String(process.env.NPC_DEBUG || "true").trim().toLowerCase() !== "false";
+const aiConfig = readAiConfig(process.env);
 const cooldowns = new Map();
 
 const client = new Client({
@@ -76,6 +82,10 @@ function debug(message) {
 client.once(Events.ClientReady, (readyClient) => {
   console.log(`Chaos NPC online jako ${readyClient.user.tag}`);
   console.log(`Timezone: ${timezone}`);
+  const aiStatus = getAiRuntimeStatus(aiConfig, timezone);
+  console.log(`AI provider: ${aiStatus.provider}`);
+  console.log(`AI model: ${aiStatus.model}`);
+  console.log(`AI daily limit: ${aiStatus.dailyLimit}`);
   console.log(
     allowedChannelIds.size > 0
       ? `Allowed channels: ${Array.from(allowedChannelIds).join(", ")}`
@@ -117,22 +127,40 @@ client.on(Events.MessageCreate, async (message) => {
     await message.channel.sendTyping();
     await sleep(350 + Math.floor(Math.random() * 700));
 
-    const content = buildNpcReply({
+    let fallbackContent = "";
+    const fallbackReply = () => {
+      if (!fallbackContent) {
+        fallbackContent = buildNpcReply({
+          content: message.content,
+          botId: client.user.id,
+          guildId: message.guildId,
+          timeZone: timezone,
+          messageId: message.id,
+        });
+      }
+      return fallbackContent;
+    };
+
+    const reply = await buildGroqNpcReply({
+      config: aiConfig,
       content: message.content,
       botId: client.user.id,
       guildId: message.guildId,
       timeZone: timezone,
       messageId: message.id,
+      fallbackReply,
     });
 
     await message.reply({
-      content,
+      content: reply.content,
       allowedMentions: {
         parse: [],
         repliedUser: false,
       },
     });
-    debug("Replied successfully.");
+    debug(
+      `Replied successfully. source=${reply.source} reason=${reply.reason || "ok"} usedToday=${reply.usedToday || "-"}/${reply.dailyLimit || "-"}`,
+    );
   } catch (error) {
     console.error("Blad obslugi wiadomosci:", error);
   }
