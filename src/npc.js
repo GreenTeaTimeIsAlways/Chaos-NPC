@@ -338,7 +338,7 @@ function buildNpc(guildId, timeZone) {
   };
 }
 
-function stripBotMention(content, botId) {
+export function stripBotMention(content, botId) {
   return String(content || "")
     .replace(new RegExp(`<@!?${botId}>`, "g"), "")
     .trim()
@@ -434,6 +434,24 @@ function formatChoice(npc, prompt) {
   ].join("\n");
 }
 
+export function buildNpcPersona({ guildId, timeZone, messageId }) {
+  const npc = buildNpc(guildId || "direct", timeZone || "Europe/Warsaw");
+  npc.replySeed = String(messageId || `${Date.now()}:${Math.random()}`);
+
+  return {
+    npc,
+    text: [
+      `Imie: ${npc.fullName}`,
+      `Zawod: ${npc.job}`,
+      `Miejsce: ${npc.place}`,
+      `Sekret: ${npc.secret}`,
+      `Problem: ${npc.problem}`,
+      `Cecha: ${npc.trait}`,
+      `Znak dnia: ${npc.omen}`,
+    ].join("\n"),
+  };
+}
+
 function formatDefault(npc, prompt) {
   const hasQuestion = prompt.includes("?");
   if (hasQuestion) {
@@ -461,8 +479,7 @@ function formatDefault(npc, prompt) {
 }
 
 export function buildNpcReply({ content, botId, guildId, timeZone, messageId }) {
-  const npc = buildNpc(guildId || "direct", timeZone || "Europe/Warsaw");
-  npc.replySeed = String(messageId || `${Date.now()}:${Math.random()}`);
+  const { npc } = buildNpcPersona({ guildId, timeZone, messageId });
   const prompt = stripBotMention(content, botId);
   const lowered = simplifyText(prompt);
 
