@@ -122,6 +122,7 @@ client.on(Events.MessageCreate, async (message) => {
       botId: client.user.id,
       guildId: message.guildId,
       timeZone: timezone,
+      messageId: message.id,
     });
 
     await message.reply({
