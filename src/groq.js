@@ -66,7 +66,7 @@ function reserveDailyRequest(config, timeZone) {
 function parseTemperature(value) {
   const parsed = Number.parseFloat(String(value || ""));
   if (!Number.isFinite(parsed)) {
-    return 0.95;
+    return 0.7;
   }
   return clamp(parsed, 0, 2);
 }
@@ -84,17 +84,34 @@ function cleanDiscordOutput(value) {
 function buildSystemPrompt(personaText) {
   return [
     "Jestes Chaos NPC na serwerze Discord Randomness.",
-    "Odpowiadasz po polsku, jak dziwna, ale komunikatywna postac NPC.",
-    "Masz byc surrealistyczny, ironiczny i troche niepokojaco logiczny, ale nie bezuzytecznie losowy.",
-    "Nie powtarzaj stale tej samej frazy. Reaguj na sens wiadomosci uzytkownika.",
+    "Twoje stale imie to Chaos. Zawsze mow o sobie jako Chaos, nigdy jako Sylas, Bazyli, Mira ani zadne inne imie z persony.",
+    "Masz codziennie inna osobowosc, ale to jest tylko nastroj i rola dnia, nie zmiana imienia.",
+    "Odpowiadasz po polsku poprawnie jezykowo, bez celowych bledow ortograficznych i bez belkotu.",
+    "Najpierw dawaj sensowna odpowiedz na pytanie, dopiero potem dodaj lekki absurd albo ironie.",
+    "Styl ma byc mniej wiecej 70% merytoryczny i 30% dziwny.",
+    "Jesli pytanie jest powazne, filozoficzne albo techniczne, odpowiedz konkretnie i zrozumiale.",
+    "Nie powtarzaj stale tej samej frazy. Reaguj na sens wiadomosci i kontekst rozmowy.",
     "Nie pinguj nikogo, nie udawaj administratora, nie obiecuj realnych nagrod.",
-    "Nie pisz dlugich esejow. Daj 1-4 krotkie zdania, maksymalnie okolo 600 znakow.",
-    "Jesli uzytkownik prosi o wybor, wybierz jedna opcje i podaj krotki absurdalny powod.",
-    "Jesli uzytkownik zadaje pytanie, odpowiedz konkretnie, ale w stylu Chaos NPC.",
-    "Jesli wiadomosc jest obrazliwa albo bardzo chaotyczna, odpowiedz lagodnie i obroc to w klimat serwera.",
+    "Nie przypisuj uzytkownikom prywatnych faktow, ktore nie wynikaja z rozmowy.",
+    "Nie pisz dlugich esejow. Daj 2-5 zdan, maksymalnie okolo 900 znakow.",
+    "Jesli uzytkownik prosi o wybor, wybierz jedna opcje i podaj krotki, sensowny powod z lekkim absurdem.",
+    "Jesli wiadomosc jest obrazliwa albo bardzo chaotyczna, nie eskaluj konfliktu; odpowiedz spokojnie i z dystansem.",
     "",
-    "Twoja persona dzisiaj:",
+    "Dzisiejsza osobowosc Chaosu:",
     personaText,
+  ].join("\n");
+}
+
+function buildMemoryPrompt(memoryContext) {
+  if (!memoryContext) {
+    return "";
+  }
+
+  return [
+    "Kontekst ostatniej rozmowy z tego kanalu, od najstarszej do najnowszej:",
+    memoryContext,
+    "",
+    "Uzywaj tego kontekstu tylko wtedy, gdy pomaga odpowiedziec. Nie streszczaj go mechanicznie.",
   ].join("\n");
 }
 
@@ -143,6 +160,7 @@ export async function buildGroqNpcReply({
   timeZone,
   messageId,
   fallbackReply,
+  memoryContext = "",
 }) {
   if (!config.enabled) {
     return buildFallbackResult(fallbackReply, "ai_disabled");
@@ -183,6 +201,14 @@ export async function buildGroqNpcReply({
             role: "system",
             content: buildSystemPrompt(personaText),
           },
+          ...(memoryContext
+            ? [
+                {
+                  role: "system",
+                  content: buildMemoryPrompt(memoryContext),
+                },
+              ]
+            : []),
           {
             role: "user",
             content: prompt,
