@@ -9,6 +9,10 @@ import {
   getAiRuntimeStatus,
   readAiConfig,
 } from "./groq.js";
+import {
+  createConversationMemory,
+  readMemoryConfig,
+} from "./memory.js";
 import { buildNpcReply } from "./npc.js";
 
 function requireEnv(name) {
@@ -42,6 +46,8 @@ const replyChance = Math.max(1, Math.min(100, toInt(process.env.NPC_REPLY_CHANCE
 const allowedChannelIds = new Set(splitCsv(process.env.NPC_ALLOWED_CHANNEL_IDS));
 const debugLogs = String(process.env.NPC_DEBUG || "true").trim().toLowerCase() !== "false";
 const aiConfig = readAiConfig(process.env);
+const memoryConfig = readMemoryConfig(process.env);
+const conversationMemory = createConversationMemory(memoryConfig);
 const cooldowns = new Map();
 
 const client = new Client({
@@ -87,6 +93,11 @@ client.once(Events.ClientReady, (readyClient) => {
   console.log(`AI model: ${aiStatus.model}`);
   console.log(`AI daily limit: ${aiStatus.dailyLimit}`);
   console.log(
+    memoryConfig.enabled
+      ? `Memory: on (${memoryConfig.contextMessages}/${memoryConfig.maxMessages} messages, ${memoryConfig.ttlMinutes} min TTL)`
+      : "Memory: off",
+  );
+  console.log(
     allowedChannelIds.size > 0
       ? `Allowed channels: ${Array.from(allowedChannelIds).join(", ")}`
       : "Allowed channels: wszystkie",
@@ -108,6 +119,9 @@ client.on(Events.MessageCreate, async (message) => {
       debug(`Ignored: channel ${message.channelId} is not in NPC_ALLOWED_CHANNEL_IDS.`);
       return;
     }
+
+    const memoryContext = conversationMemory.getContext(message);
+    conversationMemory.remember(message, client.user.id);
 
     if (!message.mentions.users.has(client.user.id)) {
       debug(`Ignored: message does not mention bot id ${client.user.id}.`);
@@ -149,6 +163,7 @@ client.on(Events.MessageCreate, async (message) => {
       timeZone: timezone,
       messageId: message.id,
       fallbackReply,
+      memoryContext,
     });
 
     await message.reply({
