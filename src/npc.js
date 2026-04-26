@@ -1,9 +1,3 @@
-const NAMES = [
-  "Bazyli", "Mira", "Teodor", "Luna", "Klemens", "Ruta", "Oskar", "Nela", "Bruno", "Iga",
-  "Fryderyk", "Tola", "Radomir", "Kira", "Marcel", "Nora", "Zenon", "Ida", "Edek", "Gaja",
-  "Natan", "Polka", "Sylas", "Mika", "Roland", "Figa", "Tymon", "Lilka", "Benedykt", "Sonia",
-];
-
 const NICKNAMES = [
   "Trzecia Opcja", "Od Niedokonczonych Map", "Kustosz Przypadku", "Wladca Bocznicy",
   "Ostatni Parasol", "Cichy Debugger", "Kartograf Ciszy", "Szept Poniedzialku",
@@ -320,13 +314,13 @@ function getDayKey(timeZone) {
 function buildNpc(guildId, timeZone) {
   const dayKey = getDayKey(timeZone);
   const random = seededRandom(hashString(`${guildId}:${dayKey}:chaos-npc`));
-  const name = pick(NAMES, random);
   const nickname = pick(NICKNAMES, random);
   return {
     dayKey,
-    name,
+    name: "Chaos",
     nickname,
-    fullName: `${name} "${nickname}"`,
+    fullName: "Chaos",
+    personaName: `Chaos "${nickname}"`,
     job: pick(JOBS, random),
     place: pick(PLACES, random),
     secret: pick(SECRETS, random),
@@ -393,18 +387,17 @@ function buildAdvice(npc, prompt, salt = "advice") {
 
 function formatIntro(npc) {
   return [
-    `Jestem **${npc.fullName}**.`,
-    `Zawod: ${npc.job}.`,
+    "Jestem **Chaos**.",
+    `Dzisiejsza osobowosc: **${npc.nickname}**.`,
+    `Rola dnia: ${npc.job}.`,
     `Miejsce spotkania: ${npc.place}.`,
-    `Sekret: ${npc.secret}.`,
-    `Problem: ${npc.problem}.`,
     `Cecha specjalna: ${npc.trait}.`,
   ].join("\n");
 }
 
 function formatQuest(npc) {
   return [
-    `**Quest od ${npc.fullName}:**`,
+    "**Quest od Chaosu:**",
     `Znajdz albo wymysl rzecz, ktora rozwiaze problem: **${npc.problem}**.`,
     `Warunek: musi miec zwiazek z miejscem **${npc.place}**.`,
     `Nagroda: ${npc.reward}.`,
@@ -413,7 +406,7 @@ function formatQuest(npc) {
 
 function formatOmen(npc) {
   return [
-    `**Znak od ${npc.fullName}:**`,
+    "**Znak od Chaosu:**",
     npc.omen,
     `Interpretacja: ${pickFromForMessage(FILLERS, npc, npc.omen, "omen")}`,
   ].join("\n");
@@ -422,14 +415,14 @@ function formatOmen(npc) {
 function formatChoice(npc, prompt) {
   const options = getOptionsFromPrompt(prompt);
   if (options.length < 2) {
-    return `${npc.fullName} mowi: daj mi przynajmniej dwie opcje, najlepiej z "czy" albo po przecinku.`;
+    return 'Chaos mowi: daj mi przynajmniej dwie opcje, najlepiej z "czy" albo po przecinku.';
   }
 
   const seed = hashString(`${npc.dayKey}:${prompt}:${npc.fullName}`);
   const random = seededRandom(seed);
   const chosen = pick(options, random);
   return [
-    `${npc.fullName} wybiera: **${chosen}**.`,
+    `Chaos wybiera: **${chosen}**.`,
     `Powod: ${pickFromForMessage(FILLERS, npc, prompt, "choice-reason")}`,
   ].join("\n");
 }
@@ -441,12 +434,13 @@ export function buildNpcPersona({ guildId, timeZone, messageId }) {
   return {
     npc,
     text: [
-      `Imie: ${npc.fullName}`,
-      `Zawod: ${npc.job}`,
-      `Miejsce: ${npc.place}`,
-      `Sekret: ${npc.secret}`,
-      `Problem: ${npc.problem}`,
-      `Cecha: ${npc.trait}`,
+      "Stale imie: Chaos",
+      `Dzisiejsza osobowosc: ${npc.nickname}`,
+      `Rola dnia: ${npc.job}`,
+      `Miejsce symboliczne: ${npc.place}`,
+      `Sekret stylu: ${npc.secret}`,
+      `Wewnetrzny problem dnia: ${npc.problem}`,
+      `Cecha odpowiedzi: ${npc.trait}`,
       `Znak dnia: ${npc.omen}`,
     ].join("\n"),
   };
@@ -463,7 +457,7 @@ function formatDefault(npc, prompt) {
         : pickFromForMessage(OPINION_OPENERS, npc, prompt, "question");
 
     return [
-      `${npc.fullName}: ${opener}`,
+      `Chaos: ${opener}`,
       buildObservation(npc, prompt, "question-observation"),
       buildAdvice(npc, prompt, "question-advice"),
     ].join("\n");
@@ -472,7 +466,7 @@ function formatDefault(npc, prompt) {
   const opener = pickFromForMessage(STATEMENT_REACTIONS, npc, prompt, "statement");
   const close = pickFromForMessage(CONVERSATION_CLOSES, npc, prompt, "statement-close");
   return [
-    `${npc.fullName}: ${opener}`,
+    `Chaos: ${opener}`,
     buildObservation(npc, prompt, "statement-observation"),
     close,
   ].join("\n");
@@ -483,7 +477,7 @@ export function buildNpcReply({ content, botId, guildId, timeZone, messageId }) 
   const prompt = stripBotMention(content, botId);
   const lowered = simplifyText(prompt);
 
-  if (!prompt || /kim jestes|przedstaw|npc|opis/.test(lowered)) {
+  if (!prompt || /kim jestes|jak masz na imie|jak sie nazywasz|przedstaw|npc|opis/.test(lowered)) {
     return formatIntro(npc);
   }
 
